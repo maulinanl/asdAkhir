@@ -10,16 +10,12 @@
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  * The main Sudoku program
  */
 public class SudokuMain extends JFrame {
-    private static final long serialVersionUID = 1L;  // to prevent serial warning
-
-    // private variables
+    private static final long serialVersionUID = 1L;
     GameBoardPanel board = new GameBoardPanel();
     JButton btnNewGame = new JButton("New Game");
     JButton btnRestart = new JButton("Restart"); // New button for restart
@@ -43,7 +39,6 @@ public class SudokuMain extends JFrame {
         // Add buttons and timer label to the south to re-start the game via board.newGame() and restart
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(btnNewGame);
-        buttonPanel.add(btnRestart);
         buttonPanel.add(timerLabel);
         cp.add(buttonPanel, BorderLayout.EAST);
 
@@ -51,8 +46,6 @@ public class SudokuMain extends JFrame {
         // Add ActionListener for New Game button
         btnNewGame.addActionListener(e -> startNewGame());
 
-        // Add ActionListener for Restart button
-        btnRestart.addActionListener(e -> restartGame());
 
         // Initialize the game board and timer
         initializeTimer();
@@ -71,8 +64,6 @@ public class SudokuMain extends JFrame {
         if (playerName == null || playerName.trim().isEmpty()) {
             playerName = JOptionPane.showInputDialog(this, "Enter your name:");
         }
-
-        restartTimer();
         board.newGame();
     }
 

@@ -1,32 +1,16 @@
 import java.util.Collections;
 import java.util.Stack;
 
-/**
- * ES234317-Algorithm and Data Structures
- * Semester Ganjil, 2023/2024
- * Group Capstone Project
- * Group #9
- * 1 - 5026221131 - Maulina Nur Laila
- * 2 - 5026221172 - Arya Putra Tsabitah Firjatulloh
- * 3 - 5026221179 - Kadek Mawar Kumala Dewi
- */
-
 public class Puzzle {
-    // All variables have package access
-    // The numbers on the puzzle
-    int[][] numbers = new int[SudokuConstants.GRID_SIZE][SudokuConstants.GRID_SIZE];
-    // The clues - isGiven (no need to guess) or need to guess
-    boolean[][] isGiven = new boolean[SudokuConstants.GRID_SIZE][SudokuConstants.GRID_SIZE];
+    public static final int GRID_SIZE = 9;
 
-    // Constructor
+    int[][] numbers = new int[GRID_SIZE][GRID_SIZE];
+    boolean[][] isGiven = new boolean[GRID_SIZE][GRID_SIZE];
+
     public Puzzle() {
         super();
     }
 
-
-    // Generate a new puzzle given the number of cells to be guessed, which can be used
-    //  to control the difficulty level.
-    // This method shall set (or update) the arrays numbers and isGiven
     public void newPuzzle(int cellsToGuess) {
         for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
             for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
@@ -36,10 +20,10 @@ public class Puzzle {
         }
         solveSudoku();
         setGuesses(cellsToGuess);
-        randomNumber();
+        randomNumbers();
     }
 
-    private boolean randomNumber() {
+    private boolean randomNumbers() {
         Stack<Integer> numStack = new Stack<>();
         for (int i = 1; i <= SudokuConstants.GRID_SIZE; i++) {
             numStack.push(i);
@@ -50,18 +34,19 @@ public class Puzzle {
     }
 
     private boolean fillSudoku(Stack<Integer> numStack) {
-        for (int row = 0; row < SudokuConstants.GRID_SIZE; row++) {
-            for (int col = 0; col < SudokuConstants.GRID_SIZE; col++) {
+        for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
+            for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
                 numbers[row][col] = 0;
             }
         }
+        // Fill the puzzle randomly
         return fillSudokuRecursively(0, 0, numStack);
     }
-
     private boolean fillSudokuRecursively(int row, int col, Stack<Integer> numStack) {
         if (row == SudokuConstants.GRID_SIZE - 1 && col == SudokuConstants.GRID_SIZE) {
             return true;
-        } else if (col == SudokuConstants.GRID_SIZE) {
+        }
+        if (col == SudokuConstants.GRID_SIZE) {
             row++;
             col = 0;
         }
@@ -78,11 +63,9 @@ public class Puzzle {
         }
         return false;
     }
-
     private boolean isSafe(int row, int col, int num) {
         return isSafeRow(row, num) && isSafeCol(col, num) && isSafeSubgrid(row - row % SudokuConstants.SUBGRID_SIZE, col - col % SudokuConstants.SUBGRID_SIZE, num);
     }
-
     private boolean isSafeRow(int row, int num) {
         for (int col = 0; col < SudokuConstants.GRID_SIZE; col++) {
             if (numbers[row][col] == num) {
@@ -91,7 +74,6 @@ public class Puzzle {
         }
         return true;
     }
-
     private boolean isSafeCol(int col, int num) {
         for (int row = 0; row < SudokuConstants.GRID_SIZE; row++) {
             if (numbers[row][col] == num) {
@@ -100,7 +82,6 @@ public class Puzzle {
         }
         return true;
     }
-
     private boolean isSafeSubgrid(int rowStart, int colStart, int num) {
         for (int row = 0; row < SudokuConstants.SUBGRID_SIZE; row++) {
             for (int col = 0; col < SudokuConstants.SUBGRID_SIZE; col++) {
@@ -111,34 +92,66 @@ public class Puzzle {
         }
         return true;
     }
-
-    private boolean solveSudoku() {
-        solve(0, 0);
-        return false;
+    private void solveSudoku() {
+        solve();
     }
 
-    private boolean solve(int row, int col) {
-        if (col == SudokuConstants.GRID_SIZE) {
-            col = 0;
-            row++;
-            if (row == SudokuConstants.GRID_SIZE) {
-                return true;
-            }
-        } else if (numbers[row][col] != 0) {
-            return solve(row, col + 1);
-        }
+    private boolean solve() {
+        Stack<Cell> cellStack = new Stack<>();
+        int curRow = 0, curCol = 0, curValue = 1, time = 0;
 
-        for (int num = 1; num <= SudokuConstants.GRID_SIZE; num++) {
-            if (isValidPlacement(row, col, num)) {
-                numbers[row][col] = num;
-                if (solve(row, col + 1)) {
-                    return true;
+        while (cellStack.size() < GRID_SIZE * GRID_SIZE) {
+            time++;
+
+            if (isGiven[curRow][curCol]) {
+                cellStack.push(new Cell(curRow, curCol, numbers[curRow][curCol]));
+                int[] next = getNextCell(curRow, curCol);
+                curRow = next[0];
+                curCol = next[1];
+                continue;
+            }
+
+            boolean foundValidValue = false;
+            for (curValue = curValue; curValue <= GRID_SIZE; curValue++) {
+                if (isValidPlacement(curRow, curCol, curValue)) {
+                    foundValidValue = true;
+                    break;
                 }
-                numbers[row][col] = 0;
+            }
+
+            if (foundValidValue && curValue <= GRID_SIZE) {
+                numbers[curRow][curCol] = curValue;
+                cellStack.push(new Cell(curRow, curCol, curValue));
+                int[] next = getNextCell(curRow, curCol);
+                curRow = next[0];
+                curCol = next[1];
+                curValue = 1;
+            } else {
+                if (!cellStack.isEmpty()) {
+                    Cell cell = cellStack.pop();
+                    while (isGiven[cell.getRow()][cell.getCol()]) {
+                        if (!cellStack.isEmpty()) {
+                            cell = cellStack.pop();
+                        } else {
+                            System.out.println("Number of steps: " + time);
+                            return false;
+                        }
+                    }
+                    curRow = cell.getRow();
+                    curCol = cell.getCol();
+                    curValue = cell.getValue() + 1;
+                    numbers[curRow][curCol] = 0;
+                } else {
+                    System.out.println("Number of steps: " + time);
+                    return false;
+                }
             }
         }
-        return false;
+
+        System.out.println("Number of steps taken: " + time);
+        return true;
     }
+
 
     private boolean isValidPlacement(int row, int col, int num) {
         for (int i = 0; i < SudokuConstants.GRID_SIZE; i++) {
@@ -157,6 +170,20 @@ public class Puzzle {
             }
         }
         return true;
+    }
+
+    private int[] getNextCell(int row, int col) {
+        // Implementasi metode getNextCell untuk mendapatkan selanjutnya dari koordinat row dan col
+        // Misalnya:
+        int[] nextCell = new int[2];
+        col++; // Misalnya, pindah ke selanjutnya di kolom yang sama
+        if (col == GRID_SIZE) {
+            col = 0;
+            row++; // Pindah ke baris berikutnya jika sudah mencapai batas kolom
+        }
+        nextCell[0] = row;
+        nextCell[1] = col;
+        return nextCell;
     }
 
     private void setGuesses(int cellsToGuess) {
@@ -179,4 +206,3 @@ public class Puzzle {
         }
     }
 }
-
